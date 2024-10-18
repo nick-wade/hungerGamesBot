@@ -15,7 +15,9 @@ client.once('ready', () => {
 });
 
 let allyNum = 0;
-let day = 1;
+let isDay = true;
+let dayNumber = 1;
+let nightNumber = 1;
 var players = {};
 const BETRAYAL_CHANCE = 0.05;
 
@@ -497,7 +499,6 @@ const selectCombatEvent = (player, ally=null) => {
             event = getRandomEvent('fists');
             break;
     };
-    // Here, add the event if someone betrays their ally. then use .join to add before the event, hence "player betrays allyname and ___________ (event"
     
     // Call the selected event function
     return event();
@@ -527,41 +528,45 @@ async function main(channelId) {
     const channel = client.channels.cache.get(channelId);
     const eventArr = [];
 
+    // Set the title based on whether it's day or night
     const embed = new EmbedBuilder()
-        .setTitle(`--- Day ${day} Events ---`)
+        .setTitle(isDay ? `--- Day ${dayNumber} Events ---` : `--- Night ${nightNumber} Events ---`)
         .setColor(0x00AE86)
         .setTimestamp()
         .setFooter({ text: 'Use the `/next` command to proceed!' });
 
     // Process events for each player
     Object.values(players).forEach(player => {
-        const ifAttack = Math.random() < 0.15 ? "attack" : "normal";
+        if (!player.status.includes('deceased')) {
+            const ifAttack = Math.random() < 0.15 ? "attack" : "normal";
 
-        if (!player.status.includes('deceased') && ifAttack === "attack") {
-            const event = selectCombatEvent(player);
-            eventArr.push(event);
-        } else if (!player.status.includes('deceased')) {
-            const event = selectEvent(player);
-            eventArr.push(event);
-        };
+            // Determine event type based on whether it's day or night
+            let event;
+            if (ifAttack === "attack") {
+                event = selectCombatEvent(player);
+            } else if (isDay) {
+                event = selectEvent(player); // Day event
+            } else {
+                event = selectNightEvent(player); // Night event
+            }
 
-        if (player.allies.length > 0 && Math.random() < BETRAYAL_CHANCE) {
-            const betrayalEvent = handleBetrayal(player);
-            if (betrayalEvent) {
-                eventArr.push(betrayalEvent);
-            };
-        };
+            eventArr.push(event);
+
+            // Handle betrayal event during both day and night
+            if (player.allies.length > 0 && Math.random() < BETRAYAL_CHANCE) {
+                const betrayalEvent = handleBetrayal(player);
+                if (betrayalEvent) {
+                    eventArr.push(betrayalEvent);
+                }
+            }
+        }
     });
 
     // Compile event messages
-    if (eventArr.length === 0) {
-        embed.setDescription("No events occurred today.");
-    } else {
-        embed.setDescription(eventArr.join('\n\n'));
-    };
+    embed.setDescription(eventArr.length ? eventArr.join('\n\n') : "No events occurred today.");
+
     // Check for a winner
     const alivePlayers = Object.values(players).filter(player => !player.status.includes('deceased'));
-
     if (alivePlayers.length === 1) {
         embed.addFields({
             name: "🏆 Winner",
@@ -569,13 +574,22 @@ async function main(channelId) {
             inline: false
         });
         players = {};
-        day = 1;
+        dayNumber = 1;
+        nightNumber = 0;
+        isDay = true; // Reset to day
     } else {
-        day++;
+        // Increment respective counters
+        if (isDay) {
+            dayNumber++;
+        } else {
+            nightNumber++;
+        }
+        isDay = !isDay; // Toggle between day and night
     }
 
     await channel.send({ embeds: [embed] });
 };
+
 
 client.on(Events.InteractionCreate, async interaction => {
     if (!interaction.isCommand()) return;
