@@ -1,8 +1,8 @@
 const { Client, Events, GatewayIntentBits, PermissionsBitField, EmbedBuilder, UserSelectMenuBuilder } = require('discord.js');
-const { token } = require('./config.json');
+const { token } = require('./game/config.json');
 
 // Import from modules
-const { getRandInt, selectRandomLimb, handleProbability } = require('./utils');
+const { getRandInt, selectRandomLimb, handleProbability } = require('./game/utils');
 const { 
     setPlayerStatus, 
     removePlayerStatus, 
@@ -12,7 +12,7 @@ const {
     addPlayerAlly, 
     addPlayerKills,
     createPlayerFunctions 
-} = require('./player');
+} = require('./game/player');
 const { 
     handleTreeEvent, 
     handleBerryEvent, 
@@ -20,7 +20,7 @@ const {
     handleSponsorEvent, 
     handleSick, 
     handleAlly 
-} = require('./events');
+} = require('./game/events');
 const { 
     hatchet, 
     knife, 
@@ -28,8 +28,8 @@ const {
     fists, 
     molotov, 
     bow 
-} = require('./combat');
-const { createCommandHandlers } = require('./commands');
+} = require('./game/combat');
+const { createCommandHandlers } = require('./game/commands');
 
 const client = new Client({ 
     intents: [

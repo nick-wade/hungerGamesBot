@@ -1,5 +1,5 @@
-const { selectRandomLimb } = require('./utils');
-const { setPlayerStatus, addPlayerKills, removePlayerItem } = require('./player');
+const { selectRandomLimb } = require('./game/utils');
+const { setPlayerStatus, addPlayerKills, removePlayerItem } = require('./game/player');
 
 const hatchet = (player, victim, type) => {
     let eventMessage;
