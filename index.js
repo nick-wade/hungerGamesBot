@@ -1,4 +1,4 @@
-const { Client, Events, GatewayIntentBits, PermissionsBitField, EmbedBuilder, UserSelectMenuBuilder } = require('discord.js');
+const { Client, Events, GatewayIntentBits, PermissionsBitField, EmbedBuilder, UserSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { token } = require('./config.json');
 
 // Import from modules
@@ -173,8 +173,7 @@ const selectCombatEvent = (player, ally=null) => {
         const randomKey = eventKeys[getRandInt(0, eventKeys.length - 1)];
         return events[eventType][randomKey];
     }
-    
-    // Select a random event based on the player's item
+
     switch (playerInvItem) {
         case 'hatchet':
             event = getRandomEvent('hatchet');
@@ -221,19 +220,19 @@ async function main(channelId) {
     const channel = client.channels.cache.get(channelId);
     const eventArr = [];
 
-    // Set the title based on whether it's day or night
+
     const embed = new EmbedBuilder()
         .setTitle(isDay ? `--- Day ${dayNumber} Events ---` : `--- Night ${nightNumber} Events ---`)
         .setColor(0x00AE86)
         .setTimestamp()
-        .setFooter({ text: 'Use the `/next` command to proceed!' });
+        .setFooter({ text: 'Use the button below or `/next` command to proceed!' });
 
     // Process events for each player
     Object.values(players).forEach(player => {
         if (!player.status.includes('Deceased')) {
             const ifAttack = Math.random() < 0.15 ? "attack" : "normal";
 
-            // Determine event type based on whether it's day or night
+
             let event;
             if (ifAttack === "attack") {
                 event = selectCombatEvent(player);
@@ -250,21 +249,20 @@ async function main(channelId) {
             const timeNumber = isDay ? dayNumber : nightNumber;
             addPlayerEvent(player.name, event, timeLabel, timeNumber);
             
-            // Also track events for other players mentioned in the event
+
             Object.keys(players).forEach(otherPlayerName => {
                 if (otherPlayerName !== player.name && event.includes(`**${otherPlayerName}**`)) {
                     addPlayerEvent(otherPlayerName, event, timeLabel, timeNumber);
                 }
             });
 
-            // Handle betrayal event during both day and night
             if (player.allies.length > 0 && Math.random() < BETRAYAL_CHANCE) {
                 const betrayalEvent = handleBetrayal(player);
                 if (betrayalEvent) {
                     eventArr.push(betrayalEvent);
                     addPlayerEvent(player.name, betrayalEvent, timeLabel, timeNumber);
                     
-                    // Track betrayal for other players mentioned
+
                     Object.keys(players).forEach(otherPlayerName => {
                         if (otherPlayerName !== player.name && betrayalEvent.includes(otherPlayerName)) {
                             addPlayerEvent(otherPlayerName, betrayalEvent, timeLabel, timeNumber);
@@ -290,18 +288,33 @@ async function main(channelId) {
         Object.keys(players).forEach(key => delete players[key]);
         dayNumber = 1;
         nightNumber = 0;
-        isDay = true; // Reset to day
+        isDay = true;
     } else {
-        // Increment respective counters
         if (isDay) {
             dayNumber++;
         } else {
             nightNumber++;
         }
-        isDay = !isDay; // Toggle between day and night
+        isDay = !isDay;
     }
 
-    await channel.send({ embeds: [embed] });
+    if (alivePlayers.length > 1) {
+        const nextButton = new ButtonBuilder()
+            .setCustomId('next_event')
+            .setLabel('Next Event')
+            .setStyle(ButtonStyle.Primary)
+            .setEmoji('▶️');
+        
+        const row = new ActionRowBuilder()
+            .addComponents(nextButton);
+        
+        await channel.send({ 
+            embeds: [embed], 
+            components: [row] 
+        });
+    } else {
+        await channel.send({ embeds: [embed] });
+    }
 };
 
 
@@ -309,6 +322,23 @@ async function main(channelId) {
 const commandHandlers = createCommandHandlers(players, main);
 
 client.on(Events.InteractionCreate, async interaction => {
+    // Handle button interactions
+    if (interaction.isButton()) {
+        if (interaction.customId === 'next_event') {
+            main(interaction.channel.id);
+            return interaction.reply({ content: 'Proceeding to next event...', ephemeral: true });
+        }
+        return;
+    }
+    
+    // Handle select menu interactions
+    if (interaction.isStringSelectMenu()) {
+        if (interaction.customId === 'status_player_select') {
+            return commandHandlers.handleStatusSelectMenu(interaction);
+        }
+        return;
+    }
+    
     if (!interaction.isCommand()) return;
     /*if (!interaction.member.roles.cache.some(role => role.name === 'Hunger Gamer')){
         return interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });

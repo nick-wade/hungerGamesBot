@@ -1,5 +1,5 @@
 const { token, clientId, guildId } = require('./config.json');
-const { SlashCommandBuilder, REST, Routes } = require('discord.js');
+const { SlashCommandBuilder, REST, Routes, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder } = require('discord.js');
 
 const playersCount = 20; // Reduced to stay under Discord's 25 option limit
 const startCommand = 
@@ -33,12 +33,6 @@ const playerCommand =
         new SlashCommandBuilder()
             .setName('status')
             .setDescription('See the achievements and status of a player')
-            .addStringOption(option =>
-                option
-                    .setName('player_name')
-                    .setDescription('Player Name (must be exact)')
-                    .setRequired(true)
-            )
 
 const eventsCommand =
         new SlashCommandBuilder()

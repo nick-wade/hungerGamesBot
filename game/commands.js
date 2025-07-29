@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder } = require('discord.js');
 
 function createCommandHandlers(players, main) {
     async function handleStartCommand(interaction) {
@@ -8,10 +8,10 @@ function createCommandHandlers(players, main) {
             // Respond immediately to avoid timeout
             await interaction.reply({content: 'Fetching all server members and creating the game...'});
             
-            // Get all members from the guild (server)
+            // Get all members
             try {
                 const guild = interaction.guild;
-                await guild.members.fetch(); // Fetch all members
+                await guild.members.fetch();
                 
                 // Clear existing players
                 Object.keys(players).forEach(key => delete players[key]);
@@ -29,7 +29,7 @@ function createCommandHandlers(players, main) {
                             allies: [], 
                             rivals: [],
                             activity: null,
-                            eventHistory: [] // Track events that happen to this player
+                            eventHistory: []
                         };
                     }
                 });
@@ -74,7 +74,38 @@ function createCommandHandlers(players, main) {
     }
 
     async function handleStatusCommand(interaction) {
-        const playerName = interaction.options._hoistedOptions[0].value;
+        const playerName = interaction.options.getString('player_name');
+        
+        // If no player name provided, show dropdown
+        if (!playerName) {
+            const playerNames = Object.keys(players);
+            
+            if (playerNames.length === 0) {
+                return interaction.reply({ content: 'No active game found. Start a game first!', ephemeral: true });
+            }
+            
+            // Create select menu options (max 25 options)
+            const options = playerNames.slice(0, 25).map(name => ({
+                label: name,
+                value: name,
+                description: players[name].status.includes('Deceased') ? '💀 Deceased' : '❤️ Alive'
+            }));
+            
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId('status_player_select')
+                .setPlaceholder('Choose a player to view their status')
+                .addOptions(options);
+            
+            const row = new ActionRowBuilder().addComponents(selectMenu);
+            
+            return interaction.reply({
+                content: 'Select a player to view their status:',
+                components: [row],
+                ephemeral: true
+            });
+        }
+        
+        // If player name provided, show their status
         if (playerName in players){
             const player = players[playerName];
             const status = player.status.length > 0 ? player.status.join(', ') : 'Healthy';
@@ -164,10 +195,47 @@ function createCommandHandlers(players, main) {
         }
     }
 
+    async function handleStatusSelectMenu(interaction) {
+        const playerName = interaction.values[0];
+        
+        if (playerName in players){
+            const player = players[playerName];
+            const status = player.status.length > 0 ? player.status.join(', ') : 'Healthy';
+            const items = player.items.length > 0 ? player.items.join(', ') : 'No items.';
+            const allies = player.allies.length > 0 ? player.allies.join(', ') : 'No allies.';
+            const kills = player.kills.length > 0 ? player.kills.join(', ') : 'No kills.';
+            
+            // Get recent events (last 5)
+            const recentEvents = player.eventHistory.slice(-5).reverse();
+            const eventsText = recentEvents.length > 0 ? 
+                recentEvents.map(e => `**${e.time}:** ${e.event.replace(/\*\*/g, '')}`).join('\n') : 
+                'No recent events.';
+            
+            const embed = new EmbedBuilder()
+                .setTitle(`Status of ${playerName}`)
+                .setColor(player.status.includes('Deceased') ? 0xFF0000 : 0x00AE86)
+                .addFields(
+                    { name: 'Status', value: status, inline: true },
+                    { name: 'Items', value: items, inline: true },
+                    { name: 'Allies', value: allies, inline: true },
+                    { name: 'Kills', value: kills, inline: true },
+                    { name: 'Recent Events', value: eventsText.length > 1024 ? eventsText.substring(0, 1021) + '...' : eventsText, inline: false }
+                )
+                .setTimestamp()
+                .setFooter({ text: 'Use /next to proceed to the next day.' });
+            
+            return interaction.reply({ embeds: [embed] });
+        }
+        else{
+            return interaction.reply({ content: `Player not found.`, ephemeral: true });
+        }
+    }
+
     return {
         handleStartCommand,
         handleNextCommand,
         handleStatusCommand,
+        handleStatusSelectMenu,
         handleEventsCommand
     };
 }
