@@ -4,7 +4,11 @@ function setPlayerStatus(player, status) {
         player.status.push(status);
     }
 }
-
+function addPlayerRival(player, rival) {
+    if (!player.rivals.includes(rival.name)) {
+        player.rivals.push(rival.name);
+    }
+}
 function removePlayerStatus(player, status) {
     player.status = player.status.filter(s => s !== status);
 }
@@ -59,6 +63,7 @@ module.exports = {
     removePlayerItem,
     removePlayerAlly,
     addPlayerAlly,
+    addPlayerRival,
     addPlayerKills,
     createPlayerFunctions
 };

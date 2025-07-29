@@ -9,20 +9,20 @@ const handleTreeEvent = (player) => {
     switch (outcome) {
         case 'fall_and_die':
             eventMessage = `**${player.name}** climbs a tree to hide but falls out and dies.`;
-            setPlayerStatus(player, 'deceased');
+            setPlayerStatus(player, 'Deceased');
             break;
         case 'stay_night':
             eventMessage = `**${player.name}** climbs a tree and stays there for the night.`;
-            player.activity = null; // Reset activity after staying
+            player.activity = null;
             break;
         case 'find_fruits':
             eventMessage = `**${player.name}** climbs a tree and finds fruits.`;
             player.items.push('fruits');
-            player.activity = null; // Reset activity after finding fruits
+            player.activity = null;
             break;
         default:
             eventMessage = `**${player.name}** did something unexpected in the tree.`;
-            player.activity = null; // Reset activity to avoid getting stuck
+            player.activity = null;
     }
 
     return eventMessage;
@@ -37,7 +37,7 @@ const handleBerryEvent = (player) => {
     switch (outcome) {
         case 'die':
             eventMessage = `**${player.name}** ate a poisonous berry and died shortly after.`;
-            setPlayerStatus(player, 'deceased');
+            setPlayerStatus(player, 'Deceased');
             break;
         case 'sick':
             eventMessage = `**${player.name}** ate a poisonous berry and is now sick.`;
@@ -45,11 +45,14 @@ const handleBerryEvent = (player) => {
             break;
         default:
             eventMessage = `**${player.name}** had an unexpected reaction to the berry.`;
-            setPlayerStatus(player, 'sick'); // Default to sick to avoid inconsistent state
+            setPlayerStatus(player, 'sick');
     }
 
     return eventMessage;
 };
+const handleRivalEvent = (player, rival) => {
+
+}
 
 const handleStealEvent = (player, item, victim) => {
     const outcome = handleProbability('steal');
@@ -119,6 +122,7 @@ module.exports = {
     handleBerryEvent,
     handleStealEvent,
     handleSponsorEvent,
+    handleRivalEvent,
     handleSick,
     handleAlly
 };

@@ -19,7 +19,8 @@ const {
     handleStealEvent, 
     handleSponsorEvent, 
     handleSick, 
-    handleAlly 
+    handleAlly,
+    handleRivalEvent
 } = require('./game/events');
 const { 
     hatchet, 
@@ -66,7 +67,7 @@ const { addPlayerEvent } = createPlayerFunctions(players);
 
 
 function selectRandomVictim(player) {
-    const availableVictims = Object.keys(players).filter(name => name !== player.name && !players[name].status.includes('deceased'));
+    const availableVictims = Object.keys(players).filter(name => name !== player.name && !players[name].status.includes('Deceased'));
     if (availableVictims.length === 0) return null; // No available victims
     const victimName = availableVictims[getRandInt(0, availableVictims.length - 1)];
     return players[victimName];
@@ -139,28 +140,28 @@ const selectCombatEvent = (player, ally=null) => {
     const playerInvItem = player.items[getRandInt(0, player.items.length - 1)]
     const events = {
         "hatchet": {
-            "decapitate": () => hatchet(player, victim, 'decapitate'),
+            "decapitate": () => hatchet(player, victim, 'decapitate', players),
         },
         "knife": {
-            "stabHeart": () => knife(player, victim, 'heart'),
-            "slitThroat": () => knife(player, victim, 'throat'),
+            "stabHeart": () => knife(player, victim, 'heart', players),
+            "slitThroat": () => knife(player, victim, 'throat', players),
         },
         "explosives": {
-            "detonate": () => explosives(player, victim, 'detonate'),
+            "detonate": () => explosives(player, victim, 'detonate', players),
         },
         "fists": {
-            "beat": () => fists(player, victim, 'beat'),
-            "overpower": () => fists(player, victim, 'overpower'),
-            "strangulate": () => fists(player, victim, 'strangle'),
-            "neckSnap": () => fists(player, victim, "neckSnap"),
+            "beat": () => fists(player, victim, 'beat', players),
+            "overpower": () => fists(player, victim, 'overpower', players),
+            "strangulate": () => fists(player, victim, 'strangle', players),
+            "neckSnap": () => fists(player, victim, "neckSnap", players),
         },
         "molotov": {
-            "throw": () => molotov(player, victim, 'throw'),
-            "miss": () => molotov(player, victim, 'miss'),
+            "throw": () => molotov(player, victim, 'throw', players),
+            "miss": () => molotov(player, victim, 'miss', players),
         },
         "bow": {
-            "hit_heart": () => bow(player, victim, 'hit_heart'),
-            "hit_limb": () => bow(player, victim, 'hit_limb'),
+            "hit_heart": () => bow(player, victim, 'hit_heart', players),
+            "hit_limb": () => bow(player, victim, 'hit_limb', players),
         },
     };
     
@@ -229,7 +230,7 @@ async function main(channelId) {
 
     // Process events for each player
     Object.values(players).forEach(player => {
-        if (!player.status.includes('deceased')) {
+        if (!player.status.includes('Deceased')) {
             const ifAttack = Math.random() < 0.15 ? "attack" : "normal";
 
             // Determine event type based on whether it's day or night
@@ -278,7 +279,7 @@ async function main(channelId) {
     embed.setDescription(eventArr.length ? eventArr.join('\n\n') : "No events occurred today.");
 
     // Check for a winner
-    const alivePlayers = Object.values(players).filter(player => !player.status.includes('deceased'));
+    const alivePlayers = Object.values(players).filter(player => !player.status.includes('Deceased'));
     if (alivePlayers.length === 1) {
         embed.addFields({
             name: "🏆 Winner",

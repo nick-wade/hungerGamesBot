@@ -27,6 +27,7 @@ function createCommandHandlers(players, main) {
                             status: [], 
                             kills: [], 
                             allies: [], 
+                            rivals: [],
                             activity: null,
                             eventHistory: [] // Track events that happen to this player
                         };
@@ -89,7 +90,7 @@ function createCommandHandlers(players, main) {
             
             const embed = new EmbedBuilder()
                 .setTitle(`Status of ${playerName}`)
-                .setColor(player.status.includes('deceased') ? 0xFF0000 : 0x00AE86)
+                .setColor(player.status.includes('Deceased') ? 0xFF0000 : 0x00AE86)
                 .addFields(
                     { name: 'Status', value: status, inline: true },
                     { name: 'Items', value: items, inline: true },
@@ -126,7 +127,7 @@ function createCommandHandlers(players, main) {
                 const embed = new EmbedBuilder()
                     .setTitle(`All Events for ${playerName}`)
                     .setDescription(eventsText)
-                    .setColor(player.status.includes('deceased') ? 0xFF0000 : 0x00AE86)
+                    .setColor(player.status.includes('Deceased') ? 0xFF0000 : 0x00AE86)
                     .setTimestamp()
                     .setFooter({ text: `Total events: ${allEvents.length}` });
                 
@@ -151,7 +152,7 @@ function createCommandHandlers(players, main) {
                     new EmbedBuilder()
                         .setTitle(index === 0 ? `All Events for ${playerName}` : `Events for ${playerName} (continued)`)
                         .setDescription(chunk)
-                        .setColor(player.status.includes('deceased') ? 0xFF0000 : 0x00AE86)
+                        .setColor(player.status.includes('Deceased') ? 0xFF0000 : 0x00AE86)
                         .setFooter({ text: `Page ${index + 1}/${chunks.length} | Total events: ${allEvents.length}` })
                 );
                 
