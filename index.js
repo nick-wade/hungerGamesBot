@@ -154,6 +154,7 @@ const selectCombatEvent = (player, ally=null) => {
             "overpower": () => fists(player, victim, 'overpower', players),
             "strangulate": () => fists(player, victim, 'strangle', players),
             "neckSnap": () => fists(player, victim, "neckSnap", players),
+            "escape": () => fists(player, victim, "escape", players),
         },
         "molotov": {
             "throw": () => molotov(player, victim, 'throw', players),

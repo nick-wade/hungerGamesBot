@@ -24,6 +24,12 @@ const hatchet = (player, victim, type, players) => {
             eventMessage = `**${player.name}** decapitated **${victim.name}** with a hatchet.`;
             handleVictimDeath(player, victim, players);
             break;
+        case "escape":
+            limb = selectRandomLimb();
+            eventMessage = `**${victim.name}** managed to escape from **${player.name}**, who attacked them with a hatchet. Their ${limb} was crippled.`;
+            setPlayerStatus(victim, 'crippled');
+            removePlayerItem(player, 'hatchet');
+            break;
         default:
             eventMessage = `**${player.name}** mutilated **${victim.name}** with a hatchet.`
             handleVictimDeath(player, victim, players);
@@ -42,6 +48,12 @@ const knife = (player, victim, type, players) => {
         case "throat":
             eventMessage = `**${player.name}** slit **${victim.name}**'s throat with a knife.`;
             handleVictimDeath(player, victim, players);
+            break;
+        case "escape":
+            const limb = selectRandomLimb();
+            eventMessage = `**${victim.name}** managed to escape from **${player.name}**, who attacked them with a knife. Their ${limb} was stabbed and severed`;
+            setPlayerStatus(victim, 'crippled');
+            removePlayerItem(player, 'knife');
             break;
         default:
             eventMessage = `**${player.name}** stabbed **${victim.name}** to death with a knife.`;
@@ -70,17 +82,39 @@ const explosives = (player, victim, type, players) => {
 const fists = (player, victim, type, players) => {
     let eventMessage;
     
-    // Check if this is a revenge fight (either player is rival of the other)
+
     const isRevenge = player.rivals.includes(victim.name) || victim.rivals.includes(player.name);
     
-    // Determine win chance based on health status
+
+    if (type === "escape" && !isRevenge) {
+        const limb = selectRandomLimb();
+        eventMessage = `**${victim.name}** managed to escape from **${player.name}**'s fist attack. Their ${limb} was bruised in the process.`;
+        setPlayerStatus(victim, 'crippled');
+        return eventMessage;
+        
+    } else if (type === "escape" && isRevenge) {
+        const fightTypes = ["beat", "overpower", "strangulate", "neckSnap"];
+        type = fightTypes[Math.floor(Math.random() * fightTypes.length)];
+    }
+    
+
     let playerWinChance = 0.5; // Base 50/50
     
+    // Adjust for sick status
     if (player.status.includes('sick') && !victim.status.includes('sick')) {
-        playerWinChance = 0.3; // 30% if player is sick
+        playerWinChance = 0.3;
     } else if (!player.status.includes('sick') && victim.status.includes('sick')) {
-        playerWinChance = 0.7; // 70% if victim is sick
+        playerWinChance = 0.7; 
     }
+    
+    // Adjust for crippled status (similar to sick effect)
+    if (player.status.includes('crippled') && !victim.status.includes('crippled')) {
+        playerWinChance = Math.min(playerWinChance, 0.1); 
+    } else if (!player.status.includes('crippled') && victim.status.includes('crippled')) {
+        playerWinChance = Math.max(playerWinChance, 0.9); 
+    }
+    
+
     
     const playerWins = Math.random() < playerWinChance;
     
