@@ -1,5 +1,5 @@
 const { Client, Events, GatewayIntentBits, PermissionsBitField, EmbedBuilder, UserSelectMenuBuilder } = require('discord.js');
-const { token } = require('./game/config.json');
+const { token } = require('./config.json');
 
 // Import from modules
 const { getRandInt, selectRandomLimb, handleProbability } = require('./game/utils');
@@ -174,7 +174,6 @@ const selectCombatEvent = (player, ally=null) => {
     }
     
     // Select a random event based on the player's item
-    console.log(playerInvItem);
     switch (playerInvItem) {
         case 'hatchet':
             event = getRandomEvent('hatchet');
@@ -286,7 +285,8 @@ async function main(channelId) {
             value: `${alivePlayers[0].name} wins!`,
             inline: false
         });
-        players = {};
+        // Clear players object while keeping the same reference
+        Object.keys(players).forEach(key => delete players[key]);
         dayNumber = 1;
         nightNumber = 0;
         isDay = true; // Reset to day

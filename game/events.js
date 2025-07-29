@@ -1,5 +1,5 @@
-const { getRandInt, handleProbability } = require('./game/utils');
-const { setPlayerStatus, addPlayerItem, removePlayerItem, removePlayerStatus, addPlayerAlly } = require('./game/player');
+const { getRandInt, handleProbability } = require('./utils');
+const { setPlayerStatus, addPlayerItem, removePlayerItem, removePlayerStatus, addPlayerAlly } = require('./player');
 
 // Tree Climbing Event Handler
 const handleTreeEvent = (player) => {
